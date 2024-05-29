@@ -10,13 +10,8 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Database setup
-mongoose.connect('mongodb+srv://144singhsarthak:uTxqOZyIN8dW3jco@web-analytics-01.obv06h7.mongodb.net/?retryWrites=true&w=majority&appName=web-analytics-01', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+mongoose.connect('mongodb+srv://passwordisSArthak:passwordisSArthak@cluster0.b8muydt.mongodb.net/?retryWrites=true&w=majority');
 
-// Define models
 const analyticsSchema = new mongoose.Schema({
     timestamp: { type: Date, required: true },
     referrer: { type: String, required: true },
@@ -30,12 +25,10 @@ const analyticsSchema = new mongoose.Schema({
 
 const Analytics = mongoose.model('Analytics', analyticsSchema);
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(requestIp.mw());
 
-// Load GeoLite2 database
 let lookup;
 maxmind.open('./GeoLite2-Country.mmdb')
     .then(cityLookup => {
@@ -45,14 +38,12 @@ maxmind.open('./GeoLite2-Country.mmdb')
         console.error('Error opening GeoLite2 database:', err);
     });
 
-// Generate Anonymous ID
 function generateAnonymousId(ip, userAgent, date) {
     const hash = crypto.createHash('sha256');
     hash.update(ip + userAgent + date);
     return hash.digest('hex');
 }
 
-// Routes
 app.post('/analytics', async (req, res) => {
     try {
         const clientIp = req.clientIp;
@@ -92,7 +83,6 @@ app.post('/analytics', async (req, res) => {
     }
 });
 
-// Start server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
