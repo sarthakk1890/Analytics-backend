@@ -14,7 +14,7 @@ mongoose.connect('mongodb+srv://passwordisSArthak:passwordisSArthak@cluster0.b8m
 
 const analyticsSchema = new mongoose.Schema({
     timestamp: { type: Date, required: true },
-    referrer: { type: String, required: true },
+    referrer: { type: String, required: false },
     screenWidth: { type: Number, required: true },
     isPWA: { type: Boolean, required: true },
     navigationData: { type: Map, of: Number, required: true },
