@@ -5,9 +5,10 @@ const cors = require('cors');
 const maxmind = require('maxmind');
 const requestIp = require('request-ip');
 const crypto = require('crypto');
+require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Database setup
 mongoose.connect('mongodb+srv://144singhsarthak:uTxqOZyIN8dW3jco@web-analytics-01.obv06h7.mongodb.net/?retryWrites=true&w=majority&appName=web-analytics-01', {
