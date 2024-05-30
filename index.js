@@ -54,7 +54,7 @@ const InteractionPerpage = mongoose.model('InteractionPerpage', InteractionPerpa
 const UniqueUser = mongoose.model('UniqueUser', uniqueUserSchema);
 
 app.use(cors({
-    origin: 'https://spectacular-genie-81e9f6.netlify.app',
+    origins: ['https://spectacular-genie-81e9f6.netlify.app', 'http://localhost:5173'],
     credentials: true
 }));
 app.use(bodyParser.json());
