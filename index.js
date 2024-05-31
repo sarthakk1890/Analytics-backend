@@ -59,11 +59,11 @@ const InteractionPerpage = mongoose.model('InteractionPerpage', InteractionPerpa
 const UniqueUser = mongoose.model('UniqueUser', uniqueUserSchema);
 
 app.use(cors({
-    origin: 'https://luminous-mandazi-f56658.netlify.app',
+    origin: 'https://dazzling-liger-dfbacf.netlify.app',
     credentials: true
 }));
 app.use(cors({
-    origin: 'https://incredible-nougat-7868e3.netlify.app',
+    origin: 'https://dainty-lily-988bf6.netlify.app/',
     credentials: true
 }));
 app.use(cors({
