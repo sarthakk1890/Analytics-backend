@@ -59,17 +59,17 @@ const InteractionPerpage = mongoose.model('InteractionPerpage', InteractionPerpa
 const UniqueUser = mongoose.model('UniqueUser', uniqueUserSchema);
 
 app.use(cors({
-    origin: 'https://dazzling-liger-dfbacf.netlify.app',
+    origin: /\.netlify\.app$/,
     credentials: true
 }));
-app.use(cors({
-    origin: 'https://dainty-lily-988bf6.netlify.app/',
-    credentials: true
-}));
-app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true
-}));
+// app.use(cors({
+//     origin: 'https://dainty-lily-988bf6.netlify.app/',
+//     credentials: true
+// }));
+// app.use(cors({
+//     origin: 'http://localhost:5173',
+//     credentials: true
+// }));
 
 app.use(bodyParser.json());
 app.use(requestIp.mw());
