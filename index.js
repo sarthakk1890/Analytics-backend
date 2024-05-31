@@ -19,19 +19,6 @@ mongoose.connect("mongodb+srv://passwordisSArthak:passwordisSArthak@cluster0.b8m
     console.error('Error connecting to the database', error);
 });
 
-function getSubdomain(hostname) {
-    const parts = hostname.split('.');
-    if (parts.length > 2) {
-        return parts.slice(0, -2).join('.');
-    }
-    return null; // or return 'www' if you want to consider 'www' as a subdomain
-}
-
-app.use((req, res, next) => {
-    req.subdomain = getSubdomain(req.hostname);
-    console.log(`Subdomain: ${req.subdomain}`);
-    next();
-});
 
 
 const analyticsSchema = new mongoose.Schema({
@@ -43,25 +30,28 @@ const analyticsSchema = new mongoose.Schema({
     country: { type: String, required: true },
     anonymousId: { type: String, required: true },
     browserInfo: { type: String, required: true },
+    subdomain: { type: String, required: true }
 });
 
 const countrySchema = new mongoose.Schema({
     countries: {
         type: Map,
         of: Number
-    }
+    },
+    subdomain: { type: String, required: true }
 });
 
 const InteractionPerpageSchema = new mongoose.Schema({
     page: { type: String, required: true },
-    interactionTime: { type: Number, required: true }
+    interactionTime: { type: Number, required: true },
+    subdomain: { type: String, required: true }
 });
 
 const uniqueUserSchema = new mongoose.Schema({
     ip: { type: String, required: true },
-    visitDate: { type: Date, required: true }
+    visitDate: { type: Date, required: true },
+    subdomain: { type: String, required: true }
 });
-
 
 const Analytics = mongoose.model('Analytics', analyticsSchema);
 const Country = mongoose.model('Country', countrySchema);
@@ -69,9 +59,16 @@ const InteractionPerpage = mongoose.model('InteractionPerpage', InteractionPerpa
 const UniqueUser = mongoose.model('UniqueUser', uniqueUserSchema);
 
 app.use(cors({
-    origin: 'https://spectacular-genie-81e9f6.netlify.app/',
+    origin: 'https://spectacular-genie-81e9f6.netlify.app',
     credentials: true
 }));
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
+
+
+
 app.use(bodyParser.json());
 app.use(requestIp.mw());
 
@@ -97,9 +94,13 @@ Country.findOne().then(doc => {
     }
 });
 
-app.post('/analytics', async (req, res) => {
+app.post('/analytics/:subdomain', async (req, res) => {
     try {
-        console.log('Request Body:', req.body);
+        const subdomain = req.query.subdomain;
+
+        if (!subdomain) {
+            throw new Error('Subdomain not provided');
+        }
 
         const clientIp = req.clientIp;
         if (!clientIp) {
@@ -129,26 +130,27 @@ app.post('/analytics', async (req, res) => {
             country,
             anonymousId,
             browserInfo,
+            subdomain
         });
 
         await newAnalytics.save();
 
         for (const [page, interactionTime] of Object.entries(navigationData)) {
             await InteractionPerpage.findOneAndUpdate(
-                { page },
+                { page, subdomain },
                 { $inc: { interactionTime } },
                 { upsert: true }
             );
         }
 
-        const existingUser = await UniqueUser.findOne({ ip: clientIp });
+        const existingUser = await UniqueUser.findOne({ ip: clientIp, subdomain });
         if (!existingUser) {
-            const newUser = new UniqueUser({ ip: clientIp, visitDate: timestamp });
+            const newUser = new UniqueUser({ ip: clientIp, visitDate: timestamp, subdomain });
             await newUser.save();
         }
 
         await Country.findOneAndUpdate(
-            {},
+            { subdomain },
             { $inc: { [`countries.${country}`]: 1 } },
             { new: true, upsert: true }
         );
@@ -160,9 +162,14 @@ app.post('/analytics', async (req, res) => {
     }
 });
 
-app.get('/users-by-country', async (req, res) => {
+app.get('/users-by-country/:subdomain', async (req, res) => {
     try {
-        const countryData = await Country.findOne();
+        const { subdomain } = req.query
+        if (!subdomain) {
+            return res.status(400).json({ error: 'Subdomain not provided' });
+        }
+
+        const countryData = await Country.findOne({ subdomain });
 
         if (!countryData) {
             return res.status(200).json({ countries: {} });
@@ -177,9 +184,15 @@ app.get('/users-by-country', async (req, res) => {
     }
 });
 
-app.get('/total-users', async (req, res) => {
+app.get('/total-users/:subdomain', async (req, res) => {
     try {
-        const totalUsers = await UniqueUser.countDocuments().lean();
+
+        const { subdomain } = req.query;
+        if (!subdomain) {
+            return res.status(400).json({ error: 'Subdomain not provided' });
+        }
+
+        const totalUsers = await UniqueUser.countDocuments({ subdomain }).lean();
 
         const uniqueDates = await UniqueUser.aggregate([
             {
@@ -191,8 +204,8 @@ app.get('/total-users', async (req, res) => {
             { $sort: { _id: 1 } }
         ]);
 
-        const dates = uniqueDates.map(doc => doc._id);
-        const userCounts = uniqueDates.map(doc => doc.count);
+        // const dates = uniqueDates.map(doc => doc._id);
+        // const userCounts = uniqueDates.map(doc => doc.count);
 
         const usersPerDate = uniqueDates.map(doc => ({
             date: doc._id,
@@ -212,9 +225,15 @@ app.get('/total-users', async (req, res) => {
 });
 
 
-app.get('/interactions-per-page', async (req, res) => {
+app.get('/interactions-per-page/:subdomain', async (req, res) => {
     try {
-        const interactionsData = await InteractionPerpage.find();
+
+        const { subdomain } = req.query;
+        if (!subdomain) {
+            return res.status(400).json({ error: 'Subdomain not provided' });
+        }
+
+        const interactionsData = await InteractionPerpage.find({ subdomain });
 
         if (!interactionsData || interactionsData.length === 0) {
             return res.status(200).json({ interactions: [] });
@@ -231,9 +250,6 @@ app.get('/interactions-per-page', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-
-
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
