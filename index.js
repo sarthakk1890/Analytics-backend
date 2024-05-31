@@ -19,6 +19,21 @@ mongoose.connect("mongodb+srv://passwordisSArthak:passwordisSArthak@cluster0.b8m
     console.error('Error connecting to the database', error);
 });
 
+function getSubdomain(hostname) {
+    const parts = hostname.split('.');
+    if (parts.length > 2) {
+        return parts.slice(0, -2).join('.');
+    }
+    return null; // or return 'www' if you want to consider 'www' as a subdomain
+}
+
+app.use((req, res, next) => {
+    req.subdomain = getSubdomain(req.hostname);
+    console.log(`Subdomain: ${req.subdomain}`);
+    next();
+});
+
+
 const analyticsSchema = new mongoose.Schema({
     timestamp: { type: Date, required: true },
     referrer: { type: String, required: false },
@@ -54,7 +69,7 @@ const InteractionPerpage = mongoose.model('InteractionPerpage', InteractionPerpa
 const UniqueUser = mongoose.model('UniqueUser', uniqueUserSchema);
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://spectacular-genie-81e9f6.netlify.app/',
     credentials: true
 }));
 app.use(bodyParser.json());
