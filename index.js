@@ -92,7 +92,7 @@ function generateAnonymousId(ip, userAgent, date) {
 
 app.post('/analytics/:subdomain', async (req, res) => {
     try {
-        const subdomain = req.query.subdomain;
+        const subdomain = req.params.subdomain;
 
         if (!subdomain) {
             throw new Error('Subdomain not provided');
@@ -167,7 +167,7 @@ app.post('/analytics/:subdomain', async (req, res) => {
 
 app.get('/users-by-country/:subdomain', async (req, res) => {
     try {
-        const { subdomain } = req.query
+        const { subdomain } = req.params
         if (!subdomain) {
             return res.status(400).json({ error: 'Subdomain not provided' });
         }
@@ -190,7 +190,7 @@ app.get('/users-by-country/:subdomain', async (req, res) => {
 app.get('/total-users/:subdomain', async (req, res) => {
     try {
 
-        const { subdomain } = req.query;
+        const { subdomain } = req.params;
         if (!subdomain) {
             return res.status(400).json({ error: 'Subdomain not provided' });
         }
@@ -231,7 +231,7 @@ app.get('/total-users/:subdomain', async (req, res) => {
 app.get('/interactions-per-page/:subdomain', async (req, res) => {
     try {
 
-        const { subdomain } = req.query;
+        const { subdomain } = req.params;
         if (!subdomain) {
             return res.status(400).json({ error: 'Subdomain not provided' });
         }
