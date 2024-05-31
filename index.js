@@ -87,12 +87,6 @@ function generateAnonymousId(ip, userAgent, date) {
     return hash.digest('hex');
 }
 
-Country.findOne().then(doc => {
-    if (!doc) {
-        const initialCountries = new Country({ countries: {} });
-        initialCountries.save().then(() => console.log('Initialized countries document'));
-    }
-});
 
 app.post('/analytics/:subdomain', async (req, res) => {
     try {
@@ -105,6 +99,13 @@ app.post('/analytics/:subdomain', async (req, res) => {
         const clientIp = req.clientIp;
         if (!clientIp) {
             throw new Error('Client IP not found');
+        }
+
+        let countryDoc = await Country.findOne({ subdomain });
+        if (!countryDoc) {
+            countryDoc = new Country({ countries: {}, subdomain });
+            await countryDoc.save();
+            console.log(`Created new Country document for subdomain: ${subdomain}`);
         }
 
         let country = 'unknown';
@@ -151,7 +152,7 @@ app.post('/analytics/:subdomain', async (req, res) => {
 
         await Country.findOneAndUpdate(
             { subdomain },
-            { $inc: { [`countries.${country}`]: 1 } },
+            { $inc: { [`countries.${country}`]: 1 }, subdomain },
             { new: true, upsert: true }
         );
 
